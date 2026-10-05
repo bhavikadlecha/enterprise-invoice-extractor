@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: invoice_api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build: .
+    container_name: invoice_ui
+    command: streamlit run frontend/streamlit_app.py --server.address 0.0.0.0 --server.port 8501
+    ports:
+      - "8501:8501"
+    environment:
+      # Tell the frontend container to talk to the backend container over the Docker bridge network
+      - API_BASE=http://backend:8000
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - backend
+    restart: unless-stopped
